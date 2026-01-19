@@ -1,0 +1,103 @@
+GET http://localhost:8080/sessions
+
+
+### Get all session (with Toekn)
+GET http://localhost:8080/sessions
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJiYWxsaXNsaWZlIiwiaWF0IjoxNzY4NDcwMjcxLCJleHAiOjE3Njg1NTY2NzF9.UcFSS_mx4aJvrVi1qKiO8l6Ys5fGdCpYJh2MQ-_dJrg
+
+
+
+### Delete a session
+DELETE http://localhost:8080/sessions/1
+
+
+### Create a session
+POST http://localhost:8080/sessions
+Content-Type: application/json
+
+{
+  "locationName": "La Fitness",
+  "date": "2025-01-10",
+  "startTime": "17:00",
+  "endTime": "20:00",
+  "note": "Pick up Game",
+  "creator": {
+    "id": 1
+  }
+}
+
+
+### Update a Session
+PUT http://localhost:8080/sessions/1
+Content-Type: application/json
+
+{
+  "locationName": "24 Hour Fitness",
+  "date": "2025-01-12",
+  "startTime": "18:00",
+  "endTime": "21:00",
+  "note": "Changed location and time"
+}
+
+
+
+### Register a User
+POST http://localhost:8080/users/register
+content-type: application/json
+
+{
+  "username": "ballislife",
+  "email": "jhon@gmail.com",
+  "password": "hoops123"
+}
+
+
+
+### Login (should succeed)
+POST http://localhost:8080/users/login
+content-type: application/json
+
+{
+  "username": "ballislife",
+  "password": "hoops123"
+}
+
+
+### Login (should fail)
+POST http://localhost:8080/users/login
+content-type: application/json
+
+{
+  "username": "ballislife",
+  "password": "wrongpassword"
+}
+
+
+
+
+### Join a session
+POST http://localhost:8080/sessions/1/join
+content-type: application/json
+
+{
+  "id": 1
+}
+
+
+### Leave a session
+DELETE http://localhost:8080/sessions/1/leave
+content-type: application/json
+
+{
+  "id": 1
+}
+
+### Register with an invalid data
+POST http://localhost:8080/users/register
+content-type: application/json
+
+{
+  "username": "",
+  "email": "not-an-email",
+  "password": ""
+}
