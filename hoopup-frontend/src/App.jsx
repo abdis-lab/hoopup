@@ -5,6 +5,8 @@
 import './App.css'
 import { useState, useEffect } from "react"
 
+const API_URL = import.meta.env.VITE_API_URL
+
 // Import our components
 import Login from './components/Login'
 import Register from './components/Register'
@@ -38,7 +40,7 @@ function App() {
     // All functions live here too. We pass them down as props.
 
     async function handleRegister() {
-        const response = await fetch('http://localhost:8080/users/register', {
+        const response = await fetch(`${API_URL}/users/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -66,7 +68,7 @@ function App() {
         try {
             console.log("handleLogin fired", { username });
 
-            const response = await fetch("http://localhost:8080/users/login", {
+            const response = await fetch(`${API_URL}/users/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password }),
@@ -92,7 +94,7 @@ function App() {
 
 
     async function fetchSessions(authToken) {
-        const response = await fetch('http://localhost:8080/sessions', {
+        const response = await fetch(`${API_URL}/sessions`, {
             headers: {
                 'Authorization': 'Bearer ' + authToken
             }
@@ -103,7 +105,7 @@ function App() {
     }
 
     async function handleCreateSession() {
-        const response = await fetch('http://localhost:8080/sessions', {
+        const response = await fetch(`${API_URL}/sessions`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -129,7 +131,7 @@ function App() {
     }
 
     async function handleJoin(sessionId) {
-        const response = await fetch('http://localhost:8080/sessions/' + sessionId + '/join', {
+        const response = await fetch(`${API_URL}/sessions/` + sessionId + '/join', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -146,7 +148,7 @@ function App() {
     }
 
     async function handleLeave(sessionId) {
-        const response = await fetch('http://localhost:8080/sessions/' + sessionId + '/leave', {
+        const response = await fetch(`${API_URL}/sessions/` + sessionId + '/leave', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
