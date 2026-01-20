@@ -13,7 +13,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/sessions")
-@CrossOrigin(origins = "http:/localhost:5173")
 public class SessionController {
 
     private final SessionRepository sessionRepository;
