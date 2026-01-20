@@ -1,10 +1,4 @@
 function Login({ username, setUsername, password, setPassword, handleLogin, message, setIsRegistering }) {
-
-    function testClick() {
-        alert("Button works!")
-        handleLogin()
-    }
-
     return (
         <div className="max-w-md mx-auto mt-10 bg-white p-8 rounded-lg shadow-md">
             <h2 className="text-2xl font-bold text-center mb-6">Login</h2>
@@ -41,7 +35,6 @@ function Login({ username, setUsername, password, setPassword, handleLogin, mess
                 <button
                     type="button"
                     onClick={() => {
-                        alert("Switching to register!")
                         setIsRegistering(true)
                     }}
                     className="text-blue-500 hover:underline"
