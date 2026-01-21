@@ -40,6 +40,7 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(Arrays.asList(
                 "http://localhost:*",
                 "https://*.ondigitalocean.app",
+                "https://hoopsesh.me",
                 "https://hoopup-frontend-pjszu.ondigitalocean.app/"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
