@@ -1,11 +1,6 @@
-// App.jsx
-// This is the "brain" of our application.
-// It holds all the state and functions.
-// It decides which components to show and passes them what they need.
 import './App.css'
 import { useState, useEffect } from "react"
-
-const API_URL = import.meta.env.VITE_API_URL
+import toast, { Toaster } from 'react-hot-toast'
 
 // Import our components
 import Login from './components/Login'
@@ -13,11 +8,10 @@ import Register from './components/Register'
 import SessionForm from './components/SessionForm'
 import SessionList from './components/SessionList'
 
+const API_URL = import.meta.env.VITE_API_URL
+
 function App() {
     // ============ STATE ============
-    // All state lives here in the parent component.
-    // We pass pieces of state down to children as needed.
-
     // Auth state
     const [username, setUsername] = useState(localStorage.getItem('username') || '')
     const [password, setPassword] = useState('')
@@ -25,6 +19,10 @@ function App() {
     const [token, setToken] = useState(localStorage.getItem('token') || '')
     const [message, setMessage] = useState('')
     const [isRegistering, setIsRegistering] = useState(false)
+
+    // Loading states
+    const [isLoading, setIsLoading] = useState(false)
+    const [sessionsLoading, setSessionsLoading] = useState(false)
 
     // Session form state
     const [locationName, setLocationName] = useState('')
@@ -37,145 +35,277 @@ function App() {
     const [sessions, setSessions] = useState([])
 
     // ============ FUNCTIONS ============
-    // All functions live here too. We pass them down as props.
 
     async function handleRegister() {
-        const response = await fetch(`${API_URL}/users/register`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                username: username,
-                email: email,
-                password: password
+        setIsLoading(true)
+        try {
+            const response = await fetch(`${API_URL}/users/register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: username,
+                    email: email,
+                    password: password
+                })
             })
-        })
 
-        if (response.ok) {
-            setMessage('Registration successful! Please login.')
-            setIsRegistering(false)
-            setUsername('')
-            setEmail('')
-            setPassword('')
-        } else {
-            const data = await response.json()
-            setMessage(Object.values(data).join(', '))
+            if (response.ok) {
+                toast.success('Registration successful! Please login.')
+                setIsRegistering(false)
+                setUsername('')
+                setEmail('')
+                setPassword('')
+                setMessage('')
+            } else {
+                const data = await response.json()
+                const errorMsg = Object.values(data).join(', ')
+                setMessage(errorMsg)
+                toast.error(errorMsg)
+            }
+        } catch (err) {
+            console.error('Registration failed:', err)
+            toast.error('Registration failed. Please try again.')
+        } finally {
+            setIsLoading(false)
         }
     }
 
     async function handleLogin() {
+        setIsLoading(true)
         try {
-            console.log("handleLogin fired", { username });
-
             const response = await fetch(`${API_URL}/users/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password }),
-            });
+            })
 
-            const data = await response.text();
-            console.log("login response", response.status, data);
+            const data = await response.text()
 
             if (data.startsWith("ey")) {
-                setToken(data);
-                setMessage("Login successful");
-                fetchSessions(data);
+                setToken(data)
+                setMessage("")
                 localStorage.setItem('token', data)
                 localStorage.setItem('username', username)
+                toast.success(`Welcome back, ${username}!`)
+                fetchSessions(data)
             } else {
-                setMessage(data);
+                setMessage(data)
+                toast.error(data)
             }
         } catch (err) {
-            console.error("Login request failed:", err);
-            setMessage("Login failed (network/CORS/server issue). Check console.");
+            console.error("Login request failed:", err)
+            toast.error("Login failed. Please try again.")
+        } finally {
+            setIsLoading(false)
         }
     }
 
-
     async function fetchSessions(authToken) {
-        const response = await fetch(`${API_URL}/sessions`, {
-            headers: {
-                'Authorization': 'Bearer ' + authToken
-            }
-        })
+        setSessionsLoading(true)
+        try {
+            const response = await fetch(`${API_URL}/sessions`, {
+                headers: {
+                    'Authorization': 'Bearer ' + authToken
+                }
+            })
 
-        const data = await response.json()
-        setSessions(data)
+            if (response.ok) {
+                const data = await response.json()
+                setSessions(data)
+            } else {
+                toast.error('Failed to load sessions')
+            }
+        } catch (err) {
+            console.error('Failed to fetch sessions:', err)
+            toast.error('Failed to load sessions')
+        } finally {
+            setSessionsLoading(false)
+        }
     }
 
     async function handleCreateSession() {
-        const response = await fetch(`${API_URL}/sessions`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify({
-                locationName: locationName,
-                date: date,
-                startTime: startTime,
-                endTime: endTime,
-                note: note
-            })
-        })
+        if (!locationName || !date || !startTime || !endTime) {
+            toast.error('Please fill in all required fields')
+            return
+        }
 
-        if (response.ok) {
-            fetchSessions(token)
-            setLocationName('')
-            setDate('')
-            setStartTime('')
-            setEndTime('')
-            setNote('')
+        setIsLoading(true)
+        try {
+            const response = await fetch(`${API_URL}/sessions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    locationName: locationName,
+                    date: date,
+                    startTime: startTime,
+                    endTime: endTime,
+                    note: note
+                })
+            })
+
+            if (response.ok) {
+                toast.success('Session created successfully!')
+                fetchSessions(token)
+                setLocationName('')
+                setDate('')
+                setStartTime('')
+                setEndTime('')
+                setNote('')
+            } else {
+                toast.error('Failed to create session')
+            }
+        } catch (err) {
+            console.error('Failed to create session:', err)
+            toast.error('Failed to create session')
+        } finally {
+            setIsLoading(false)
         }
     }
 
     async function handleJoin(sessionId) {
-        const response = await fetch(`${API_URL}/sessions/` + sessionId + '/join', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify({
-                username: username
+        try {
+            const response = await fetch(`${API_URL}/sessions/${sessionId}/join`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    username: username
+                })
             })
-        })
 
-        if (response.ok) {
-            fetchSessions(token)
+            if (response.ok) {
+                toast.success('Joined session!')
+                fetchSessions(token)
+            } else {
+                toast.error('Failed to join session')
+            }
+        } catch (err) {
+            console.error('Failed to join session:', err)
+            toast.error('Failed to join session')
         }
     }
 
     async function handleLeave(sessionId) {
-        const response = await fetch(`${API_URL}/sessions/` + sessionId + '/leave', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify({
-                username: username
+        try {
+            const response = await fetch(`${API_URL}/sessions/${sessionId}/leave`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    username: username
+                })
             })
-        })
 
-        if (response.ok) {
-            fetchSessions(token)
+            if (response.ok) {
+                toast.success('Left session')
+                fetchSessions(token)
+            } else {
+                toast.error('Failed to leave session')
+            }
+        } catch (err) {
+            console.error('Failed to leave session:', err)
+            toast.error('Failed to leave session')
         }
     }
 
+
+
+
+    async function handleDeleteSession(sessionId) {
+        if (!window.confirm('Are you sure you want to delete this session?')) {
+            return
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/sessions/${sessionId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+
+            if (response.ok) {
+                toast.success('Session deleted successfully!')
+                fetchSessions(token)
+            } else {
+                const errorMsg = await response.text()
+                toast.error(errorMsg || 'Failed to delete session')
+            }
+        } catch (err) {
+            console.error('Failed to delete session:', err)
+            toast.error('Failed to delete session')
+        }
+    }
+
+    async function handleUpdateSession(sessionId, updatedData) {
+        setIsLoading(true)
+        try {
+            const response = await fetch(`${API_URL}/sessions/${sessionId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify(updatedData)
+            })
+
+            if (response.ok) {
+                toast.success('Session updated successfully!')
+                fetchSessions(token)
+                return true
+            } else {
+                const errorMsg = await response.text()
+                toast.error(errorMsg || 'Failed to update session')
+                return false
+            }
+        } catch (err) {
+            console.error('Failed to update session:', err)
+            toast.error('Failed to update session')
+            return false
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+
+
+
+
+    function handleLogout() {
+        setToken('')
+        setUsername('')
+        setPassword('')
+        localStorage.removeItem('token')
+        localStorage.removeItem('username')
+        toast.success('Logged out successfully')
+    }
+
     useEffect(() => {
-        if (token){
+        if (token) {
             fetchSessions(token)
         }
     }, [])
 
     // ============ RENDER ============
-    // This is much cleaner now! We can see the structure at a glance.
 
     return (
-        <div className="min-h-screen py-8 px-4">
-            <h1 className="text-4xl font-bold text-center text-gray-800 mb-8">🏀 HoopUp</h1>
+        <div className="min-h-screen py-8 px-4 bg-gradient-to-br from-orange-50 via-white to-blue-50">
+            <Toaster position="top-center" />
+
+            <h1 className="text-5xl font-bold text-center mb-8">
+                <span className="bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">
+                    🏀 Hoopsesh
+                </span>
+            </h1>
 
             {!token ? (
                 <div>
@@ -190,6 +320,7 @@ function App() {
                             handleRegister={handleRegister}
                             message={message}
                             setIsRegistering={setIsRegistering}
+                            isLoading={isLoading}
                         />
                     ) : (
                         <Login
@@ -200,22 +331,17 @@ function App() {
                             handleLogin={handleLogin}
                             message={message}
                             setIsRegistering={setIsRegistering}
+                            isLoading={isLoading}
                         />
                     )}
                 </div>
             ) : (
                 <div className="max-w-2xl mx-auto">
                     <div className="bg-white p-4 rounded-lg shadow-md mb-6 flex justify-between items-center">
-                        <p className="text-gray-700">Welcome, <span className="font-bold">{username}</span>!</p>
+                        <p className="text-gray-700">Welcome, <span className="font-bold text-primary-600">{username}</span>!</p>
                         <button
-                            onClick={() => {
-                                setToken('')
-                                setUsername('')
-                                setPassword('')
-                                localStorage.removeItem('token')
-                                localStorage.removeItem('username')
-                            }}
-                            className="text-red-500 hover:underline"
+                            onClick={handleLogout}
+                            className="text-red-500 hover:text-red-700 font-medium transition-colors"
                         >
                             Logout
                         </button>
@@ -233,13 +359,29 @@ function App() {
                         note={note}
                         setNote={setNote}
                         handleCreateSession={handleCreateSession}
+                        isLoading={isLoading}
                     />
 
-                    <SessionList
-                        sessions={sessions}
-                        handleJoin={handleJoin}
-                        handleLeave={handleLeave}
-                    />
+                    {sessionsLoading ? (
+                        <div className="flex justify-center items-center py-12">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+                        </div>
+                    ) : sessions.length === 0 ? (
+                        <div className="bg-white rounded-lg shadow-md p-12 text-center">
+                            <div className="text-6xl mb-4">🏀</div>
+                            <h3 className="text-xl font-semibold text-gray-700 mb-2">No sessions yet</h3>
+                            <p className="text-gray-500">Be the first to create a basketball session!</p>
+                        </div>
+                    ) : (
+                        <SessionList
+                            sessions={sessions}
+                            handleJoin={handleJoin}
+                            handleLeave={handleLeave}
+                            handleDeleteSession={handleDeleteSession}
+                            handleUpdateSession={handleUpdateSession}
+                            currentUsername={username}
+                        />
+                    )}
                 </div>
             )}
         </div>
