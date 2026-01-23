@@ -7,6 +7,7 @@ import Login from './components/Login'
 import Register from './components/Register'
 import SessionForm from './components/SessionForm'
 import SessionList from './components/SessionList'
+import Profile from "./components/Profile.jsx";
 
 const API_URL = import.meta.env.VITE_API_URL
 
@@ -33,6 +34,10 @@ function App() {
 
     // Sessions data
     const [sessions, setSessions] = useState([])
+
+
+    // Profile
+    const [showProfile, setShowProfile] = useState(false)
 
     // ============ FUNCTIONS ============
 
@@ -339,48 +344,65 @@ function App() {
                 <div className="max-w-2xl mx-auto">
                     <div className="bg-white p-4 rounded-lg shadow-md mb-6 flex justify-between items-center">
                         <p className="text-gray-700">Welcome, <span className="font-bold text-primary-600">{username}</span>!</p>
-                        <button
-                            onClick={handleLogout}
-                            className="text-red-500 hover:text-red-700 font-medium transition-colors"
-                        >
-                            Logout
-                        </button>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowProfile(!showProfile)}
+                                className="text-secondary-500 hover:text-secondary-700 font-medium transition-colors"
+                            >
+                                {showProfile ? '📋 Sessions' : '👤 Profile'}
+                            </button>
+                            <button
+                                onClick={handleLogout}
+                                className="text-red-500 hover:text-red-700 font-medium transition-colors"
+                            >
+                                Logout
+                            </button>
+                        </div>
                     </div>
 
-                    <SessionForm
-                        locationName={locationName}
-                        setLocationName={setLocationName}
-                        date={date}
-                        setDate={setDate}
-                        startTime={startTime}
-                        setStartTime={setStartTime}
-                        endTime={endTime}
-                        setEndTime={setEndTime}
-                        note={note}
-                        setNote={setNote}
-                        handleCreateSession={handleCreateSession}
-                        isLoading={isLoading}
-                    />
-
-                    {sessionsLoading ? (
-                        <div className="flex justify-center items-center py-12">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-                        </div>
-                    ) : sessions.length === 0 ? (
-                        <div className="bg-white rounded-lg shadow-md p-12 text-center">
-                            <div className="text-6xl mb-4">🏀</div>
-                            <h3 className="text-xl font-semibold text-gray-700 mb-2">No sessions yet</h3>
-                            <p className="text-gray-500">Be the first to create a basketball session!</p>
-                        </div>
-                    ) : (
-                        <SessionList
-                            sessions={sessions}
-                            handleJoin={handleJoin}
-                            handleLeave={handleLeave}
-                            handleDeleteSession={handleDeleteSession}
-                            handleUpdateSession={handleUpdateSession}
-                            currentUsername={username}
+                    {showProfile ? (
+                        <Profile
+                            token={token}
+                            onClose={() => setShowProfile(false)}
                         />
+                    ) : (
+                        <>
+                            <SessionForm
+                                locationName={locationName}
+                                setLocationName={setLocationName}
+                                date={date}
+                                setDate={setDate}
+                                startTime={startTime}
+                                setStartTime={setStartTime}
+                                endTime={endTime}
+                                setEndTime={setEndTime}
+                                note={note}
+                                setNote={setNote}
+                                handleCreateSession={handleCreateSession}
+                                isLoading={isLoading}
+                            />
+
+                            {sessionsLoading ? (
+                                <div className="flex justify-center items-center py-12">
+                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+                                </div>
+                            ) : sessions.length === 0 ? (
+                                <div className="bg-white rounded-lg shadow-md p-12 text-center">
+                                    <div className="text-6xl mb-4">🏀</div>
+                                    <h3 className="text-xl font-semibold text-gray-700 mb-2">No sessions yet</h3>
+                                    <p className="text-gray-500">Be the first to create a basketball session!</p>
+                                </div>
+                            ) : (
+                                <SessionList
+                                    sessions={sessions}
+                                    handleJoin={handleJoin}
+                                    handleLeave={handleLeave}
+                                    handleDeleteSession={handleDeleteSession}
+                                    handleUpdateSession={handleUpdateSession}
+                                    currentUsername={username}
+                                />
+                            )}
+                        </>
                     )}
                 </div>
             )}
